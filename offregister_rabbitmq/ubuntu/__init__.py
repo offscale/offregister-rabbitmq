@@ -1,3 +1,5 @@
+from os import urandom
+
 from fabric.operations import sudo, run
 
 from offregister_fab_utils.apt import apt_depends
@@ -14,8 +16,7 @@ def install0(**kwargs):
 
 
 def create_user1(**kwargs):
-    print 'create_user1::kwargs', kwargs
-    password = kwargs.get('password', pwgen())
+    password = kwargs.get('password', generate_temp_password(15))
     sudo("rabbitmqctl add_user {rmq_user} '{password}'".format(rmq_user=kwargs['rmq_user'], password=password),
          shell_escape=False)
     if 'rmq_vhost' in kwargs:
@@ -27,5 +28,6 @@ def create_user1(**kwargs):
     return password
 
 
-def pwgen():
-    return run("head -c 8192 /dev/urandom | strings --bytes 8 | sed 's/\s//'")
+def generate_temp_password(length):
+    chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return "".join(chars[ord(c) % len(chars)] for c in urandom(length))
