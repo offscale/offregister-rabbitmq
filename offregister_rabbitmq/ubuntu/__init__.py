@@ -1,8 +1,7 @@
-from os import urandom
-
 from fabric.operations import sudo, run
 
 from offregister_fab_utils.apt import apt_depends
+from offutils import generate_temp_password
 
 
 def install0(**kwargs):
@@ -26,8 +25,3 @@ def create_user1(**kwargs):
         rmq_user=kwargs['rmq_user'], permissions=kwargs.get('permissions', '".*" ".*" ".*"')
     ))
     return password
-
-
-def generate_temp_password(length):
-    chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return "".join(chars[ord(c) % len(chars)] for c in urandom(length))
