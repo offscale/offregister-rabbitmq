@@ -38,6 +38,6 @@ if __name__ == '__main__':
         test_suite=package_name + '.tests',
         packages=find_packages(),
         package_dir={package_name: package_name},
-        install_requires=['fabric==1.14.0'],
+        install_requires=['fab-classic', 'paramiko'],
         data_files=[(_data_install_dir(), map(_data_join, listdir(_data_join())))]
     )

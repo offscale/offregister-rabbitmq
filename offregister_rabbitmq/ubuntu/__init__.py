@@ -9,15 +9,23 @@ def install0(**kwargs):
     installed = lambda: run("dpkg-query --showformat='${Version}' --show rabbitmq-server", quiet=True)
 
     if sudo('dpkg -s rabbitmq-server', quiet=True, warn_only=True).failed:
-        sudo('wget -O - "https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey" | apt-key add -')
-        sudo('apt-key adv --keyserver "hkps.pool.sks-keyservers.net" --recv-keys "0x6B73A36E6026DFCA"')
+        apt_depends('apt-transport-https', 'curl')
         sudo(
-            'wget -O - "https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc" | apt-key add -')
-        append('/etc/apt/sources.list.d/bintray.rabbitmq.list',
-               'deb https://dl.bintray.com/rabbitmq/debian {codename} main'.format(
-                   codename=run('lsb_release -cs', quiet=True)
+            'curl -fsSL https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc'
+            ' | apt-key add -')
+        sudo('apt-key adv --keyserver "hkps.pool.sks-keyservers.net" --recv-keys "0x6B73A36E6026DFCA"')
+        codename = run('lsb_release -cs', quiet=True)
+        append('/etc/apt/sources.list.d/bintray.erlang.list',
+               'deb https://dl.bintray.com/rabbitmq-erlang/debian {codename} erlang'.format(
+                   codename=codename
                ),
                use_sudo=True)
+        append('/etc/apt/sources.list.d/bintray.rabbitmq.list',
+               'deb https://dl.bintray.com/rabbitmq/debian {codename} main'.format(
+                   codename=codename
+               ),
+               use_sudo=True)
+        sudo('apt-get update -qq')
         apt_depends('rabbitmq-server')
         return 'RabbitMQ {} installed'.format(installed())
 
