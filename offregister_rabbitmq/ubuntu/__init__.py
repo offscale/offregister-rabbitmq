@@ -1,6 +1,5 @@
 from fabric.contrib.files import append
-from fabric.operations import sudo, run
-
+from fabric.operations import run, sudo
 from offregister_fab_utils.apt import apt_depends
 from offutils import gen_random_str
 
