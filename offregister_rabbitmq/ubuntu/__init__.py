@@ -1,24 +1,23 @@
-from fabric.contrib.files import append
-from fabric.operations import run, sudo
 from offregister_fab_utils.apt import apt_depends
 from offutils import gen_random_str
+from patchwork.files import append
 
 
 def install0(**kwargs):
-    installed = lambda: run(
-        "dpkg-query --showformat='${Version}' --show rabbitmq-server", quiet=True
+    installed = lambda: c.run(
+        "dpkg-query --showformat='${Version}' --show rabbitmq-server", hide=True
     )
 
-    if sudo("dpkg -s rabbitmq-server", quiet=True, warn_only=True).failed:
-        apt_depends("apt-transport-https", "curl")
-        sudo(
+    if c.sudo("dpkg -s rabbitmq-server", hide=True, warn=True).exited != 0:
+        apt_depends(c, "apt-transport-https", "curl")
+        c.sudo(
             "curl -fsSL https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc"
             " | apt-key add -"
         )
-        sudo(
+        c.sudo(
             'apt-key adv --keyserver "hkps.pool.sks-keyservers.net" --recv-keys "0x6B73A36E6026DFCA"'
         )
-        codename = run("lsb_release -cs", quiet=True)
+        codename = c.run("lsb_release -cs", hide=True)
         append(
             "/etc/apt/sources.list.d/bintray.erlang.list",
             "deb https://dl.bintray.com/rabbitmq-erlang/debian {codename} erlang".format(
@@ -33,8 +32,8 @@ def install0(**kwargs):
             ),
             use_sudo=True,
         )
-        sudo("apt-get update -qq")
-        apt_depends("rabbitmq-server")
+        c.sudo("apt-get update -qq")
+        apt_depends(c, "rabbitmq-server")
         return "RabbitMQ {} installed".format(installed())
 
     return "[Already] RabbitMQ {} installed".format(installed())
@@ -42,15 +41,16 @@ def install0(**kwargs):
 
 def create_user1(**kwargs):
     password = kwargs.get("password", gen_random_str(15))
-    sudo(
+    c.sudo(
         "rabbitmqctl add_user {rmq_user} '{password}'".format(
             rmq_user=kwargs["rmq_user"], password=password
-        ),
-        shell_escape=False,
+        )
     )
     if "rmq_vhost" in kwargs:
-        sudo("rabbitmqctl add_vhost {rmq_vhost}".format(rmq_vhost=kwargs["rmq_vhost"]))
-    sudo(
+        c.sudo(
+            "rabbitmqctl add_vhost {rmq_vhost}".format(rmq_vhost=kwargs["rmq_vhost"])
+        )
+    c.sudo(
         "rabbitmqctl set_permissions {rmq_vhost} {rmq_user} {permissions}".format(
             rmq_vhost="-p {rmq_vhost}".format(rmq_vhost=kwargs["rmq_vhost"])
             if "rmq_vhost" in kwargs
