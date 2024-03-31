@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from offregister_fab_utils.apt import apt_depends
 from offutils import gen_random_str
 from patchwork.files import append
